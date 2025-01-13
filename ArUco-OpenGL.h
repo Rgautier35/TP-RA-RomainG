@@ -16,7 +16,7 @@
 #include <GL/gl.h>
 #endif
 #include <iostream>
-
+#include <cmath>
 #include <fstream>
 #include <sstream>
 
@@ -26,6 +26,10 @@
 using namespace cv;
 using namespace aruco;
 using namespace std;
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 class ArUco {
 // Attributes
@@ -79,6 +83,10 @@ public:
    // Draw pyramid function
 
    void drawPyramid(GLfloat size);
+
+   void drawCube(GLfloat size);
+
+   void drawCylinder(GLfloat size);
 
    // GLUT functionnalities
    

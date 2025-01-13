@@ -10,6 +10,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2\calib3d.hpp>
 
+// Liste des id des marqueurs qu'on utilise
+const vector<int> listMarkerId = { 85, 90, 144, 161, 166, 214, 227, 244 };
+
 // Constructor
 ArUco::ArUco(string intrinFileName, float markerSize) {
    // Initializing attributes
@@ -108,50 +111,194 @@ void ArUco::drawBox(GLfloat size, GLenum type)
 
 void ArUco::drawPyramid(GLfloat size) {
     
-	// Définir les sommets de la pyramide
-	GLfloat vertices[] = {
-		// Base de la pyramide (quadrilatère)
-		-size / 2,  -size / 2, 0.0f ,  // V0
-		 size / 2,  -size / 2, 0.0f , // V1
-		 size / 2,   size / 2, 0.0f , // V2
-		-size / 2,   size / 2, 0.0f , // V3
-
-		// Sommet de la pyramide
-		 0.0f,   0.0f ,  size , // Apex (sommet de la pyramide)
+	static const GLfloat n[4][3] =
+	{
+	  {0.0f, 1.0f, 1.0f},  // Normale pour la première face
+	{0.0f, 1.0f, -1.0f}, // Normale pour la deuxième face
+	{1.0f, 1.0f, 0.0f},  // Normale pour la troisième face
+	{-1.0f, 1.0f, 0.0f}  // Normale pour la quatrième face
 	};
+	static const GLint faces[4][3] =
+	{
+	  {0, 1, 2},
+	  {0, 2, 3},
+	  {0, 3, 4},
+	  {0, 4, 1},
+	};
+	GLfloat v[5][3];
+	GLint i;
 
-	glColor3f(1.0f, 0.0f, 1.0f);
+	v[0][0] = v[0][1] = 0.0f;
+	v[0][2] = size/2;
 
-	glBegin(GL_TRIANGLES);
-	// Faces de la pyramide
-	glVertex3fv(&vertices[0]); 
-	glVertex3fv(&vertices[1]); 
-	glVertex3fv(&vertices[4]); 
-	glEnd();
+	v[1][0] = v[1][1] = -size/2;
+	v[1][2] = -size / 2;
 
-	glBegin(GL_TRIANGLES);
-	// Faces de la pyramide
-	glVertex3fv(&vertices[1]);
-	glVertex3fv(&vertices[2]);
-	glVertex3fv(&vertices[4]);
-	glEnd();
+	v[2][0] = size/2;
+	v[2][1] = -size/2;
+	v[2][2] = -size / 2;
 
-	glBegin(GL_TRIANGLES);
-	// Faces de la pyramide
-	glVertex3fv(&vertices[2]);
-	glVertex3fv(&vertices[3]);
-	glVertex3fv(&vertices[4]);
-	glEnd();
+	v[3][0] = v[3][1] = size/2;
+	v[3][2] = -size / 2;
 
-	glBegin(GL_TRIANGLES);
-	// Faces de la pyramide
-	glVertex3fv(&vertices[3]);
-	glVertex3fv(&vertices[0]);
-	glVertex3fv(&vertices[4]);
-	glEnd();
-	
+	v[4][1] = size/2;
+	v[4][0] = -size / 2;
+	v[4][2] = -size / 2;
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glColor3f(1.0f, 0.0f, 0.0f);
+
+	for (i = 0; i <= 3; i++) {
+		glBegin(GL_TRIANGLES);
+		glNormal3fv(&n[i][0]);
+		glVertex3fv(&v[faces[i][0]][0]);
+		glVertex3fv(&v[faces[i][1]][0]);
+		glVertex3fv(&v[faces[i][2]][0]);
+		glEnd();
+	}
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0.0f, 0.0f, 0.0f);
+
+	for (i = 0; i <= 3; i++) {
+		glBegin(GL_TRIANGLES);
+		glNormal3fv(&n[i][0]);
+		glVertex3fv(&v[faces[i][0]][0]);
+		glVertex3fv(&v[faces[i][1]][0]);
+		glVertex3fv(&v[faces[i][2]][0]);
+		glEnd();
+	}
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
+void ArUco::drawCube(GLfloat size) {
+
+	GLfloat v[8][3] = {
+		{-size/2,-size / 2, -size / 2},
+		{ size / 2, -size / 2, -size / 2},
+		{ size / 2,  size / 2, -size / 2},
+		{-size / 2,  size / 2, -size / 2},
+		{-size / 2, -size / 2,  size / 2},
+		{ size / 2, -size / 2,  size / 2},
+		{ size / 2,  size / 2,  size / 2},
+		{-size / 2,  size / 2,  size / 2}
+	};
+
+	GLint faces[5][4] = {
+	//{0, 1, 2, 3}, 
+	{4, 5, 6, 7}, 
+	{0, 1, 5, 4}, 
+	{2, 3, 7, 6}, 
+	{1, 2, 6, 5}, 
+	{4, 7, 3, 0}  
+	};
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glBegin(GL_QUADS);
+	for (int i = 0; i < 5; i++) {
+		glVertex3fv(&v[faces[i][0]][0]); // Premier sommet de la face
+		glVertex3fv(&v[faces[i][1]][0]); // Deuxième sommet de la face
+		glVertex3fv(&v[faces[i][2]][0]); // Troisième sommet de la face
+		glVertex3fv(&v[faces[i][3]][0]); // Quatrième sommet de la face
+	}
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0.0f, 0.0f, .0f);
+	glBegin(GL_QUADS);
+	for (int i = 0; i < 5; i++) {
+		glVertex3fv(&v[faces[i][0]][0]); // Premier sommet de la face
+		glVertex3fv(&v[faces[i][1]][0]); // Deuxième sommet de la face
+		glVertex3fv(&v[faces[i][2]][0]); // Troisième sommet de la face
+		glVertex3fv(&v[faces[i][3]][0]); // Quatrième sommet de la face
+	}
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+
+void ArUco::drawCylinder(GLfloat size) {
+
+	float radius = size / 2;
+	float height = size;
+	int slices = 20;
+	float angleStep = 2.0f * M_PI / slices; // L'angle entre chaque segment de la base
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0.0f, 0.0f, 0.0f);
+
+	// Dessiner la base inférieure
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < slices; i++) {
+		float angle = i * angleStep;
+		float x = radius * cos(angle);
+		float y = radius * sin(angle);
+		glVertex3f(x, y, -size / 2);
+	}
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glColor3f(0.0f, 1.0f, 0.0f);
+
+	// Dessiner la base inférieure
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < slices; i++) {
+		float angle = i * angleStep;
+		float x = radius * cos(angle);
+		float y = radius * sin(angle);
+		glVertex3f(x, y, -size/2);  
+	}
+	glEnd();
+
+	// Dessiner la base supérieure
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < slices; i++) {
+		float angle = i * angleStep;
+		float x = radius * cos(angle);
+		float y = radius * sin(angle);
+		glVertex3f(x, y, size/2);  // Base à z = height
+	}
+	glEnd();
+
+	// Dessiner les faces latérales
+	glBegin(GL_QUAD_STRIP);
+	for (int i = 0; i < slices; i++) {
+		float angle = i * angleStep;
+		float nextAngle = (i + 1) * angleStep;
+
+		// Points de la base inférieure
+		float x0 = radius * cos(angle);
+		float y0 = radius * sin(angle);
+		// Points de la base supérieure
+		float x1 = radius * cos(nextAngle);
+		float y1 = radius * sin(nextAngle);
+
+		// Points pour les faces latérales
+		glVertex3f(x0, y0, -size / 2);       
+		glVertex3f(x0, y0, size/2);     
+		glVertex3f(x1, y1, -size / 2);       
+		glVertex3f(x1, y1, size / 2);     
+	}
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0.0f, 0.0f, 0.0f);
+
+	// Dessiner la base supérieure
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < slices; i++) {
+		float angle = i * angleStep;
+		float x = radius * cos(angle);
+		float y = radius * sin(angle);
+		glVertex3f(x, y, size / 2);  // Base à z = height
+	}
+	glEnd();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
 
 // GLUT functionnalities
 
@@ -205,6 +352,7 @@ void ArUco::drawScene() {
    // Pour chaque marqueur detecte
    for (unsigned int m=0;m<m_Markers.size();m++)
    {
+	   cout << m_Markers[m].id << endl;
 	   // On recupere la matrice de modelview qui correspond au marqueur [m]
        m_Markers[m].glGetModelViewMatrix(modelview_matrix);
        glMatrixMode(GL_MODELVIEW);
@@ -215,22 +363,34 @@ void ArUco::drawScene() {
       // On dessine les axes X Y Z
       //drawAxis(m_MarkerSize);
 
+	   // On se deplace sur Z de la moitie du marqueur pour dessiner "sur" le plan du marqueur
+	   glTranslatef(0, 0, m_MarkerSize / 2.);
+
+	   // On sauvegarde la matrice courante
+	   glPushMatrix();
+
+	   if (m_Markers[m].id == 85 || m_Markers[m].id == 90) {
+		   drawPyramid(m_MarkerSize);
+	  }
+
+	   if (m_Markers[m].id == 144 || m_Markers[m].id == 161) {
+		   drawCube(m_MarkerSize);
+	   }
+
+	   if (m_Markers[m].id == 166 || m_Markers[m].id == 214) {
+		   drawCylinder(m_MarkerSize);
+	   }
+
 	  
 
-      // On se deplace sur Z de la moitie du marqueur pour dessiner "sur" le plan du marqueur
-      glTranslatef(0, 0, m_MarkerSize/2.);
-     
-	  // On sauvegarde la matrice courante
-      glPushMatrix();
+
 	  // on choisit une couleur
-	  glColor3f(1, 0.4f, 0.4f);
-
+	  //glColor3f(1, 0.4f, 0.4f);
 	  //On dessine une cube en fil de fer
-      drawWireCube( m_MarkerSize );
+      //drawWireCube( m_MarkerSize );
 
-	  //glDisable(GL_CULL_FACE);
-      // Ajouter votre code ici !!
-	  drawPyramid(m_MarkerSize);
+	  // On sauvegarde la matrice courante
+	  glPushMatrix();
 
       // On re=charge la matrice que l'on a sauvegarde
       glPopMatrix();
