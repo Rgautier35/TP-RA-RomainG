@@ -19,6 +19,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "C:/Users/Eleve/source/repos/TP RA/aruco-3.1.12/src/aruco.h"
 
@@ -82,11 +83,11 @@ public:
 
    // Draw pyramid function
 
-   void drawPyramid(GLfloat size);
+   void drawPyramid(GLfloat size, float color[3]);
 
-   void drawCube(GLfloat size);
+   void drawCube(GLfloat size, float color[3]);
 
-   void drawCylinder(GLfloat size);
+   void drawCylinder(GLfloat size, float color[3]);
 
    // GLUT functionnalities
    

@@ -12,6 +12,16 @@
 
 // Liste des id des marqueurs qu'on utilise
 const vector<int> listMarkerId = { 85, 90, 144, 161, 166, 214, 227, 244 };
+float red[3] = { 1.0f, 0.0f, 0.0f };
+float blue[3] = { 0.0f, 0.0f, 1.0f }; 
+float green[3] = { 0.0f, 1.0f, 0.0f };
+float yellow[3] = { 1.0f, 1.0f, 0.0f };
+
+// Fonction qui vérifie si un marqueur parmi la liste des marqueurs est trouvé
+bool containsMarkerWithId(const vector<Marker>& markers, int targetId) {
+	return any_of(markers.begin(), markers.end(), [targetId](const Marker& marker) {
+		return marker.id == targetId;  /*On vérifie si l'identifiant correspond à celui recherché*/  });
+}
 
 // Constructor
 ArUco::ArUco(string intrinFileName, float markerSize) {
@@ -109,7 +119,7 @@ void ArUco::drawBox(GLfloat size, GLenum type)
 }
 
 
-void ArUco::drawPyramid(GLfloat size) {
+void ArUco::drawPyramid(GLfloat size, float color[3]) {
     
 	static const GLfloat n[4][3] =
 	{
@@ -146,7 +156,7 @@ void ArUco::drawPyramid(GLfloat size) {
 	v[4][2] = -size / 2;
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(1.0f, 0.0f, 0.0f);
+	glColor3f(color[0], color[1], color[2]);
 
 	for (i = 0; i <= 3; i++) {
 		glBegin(GL_TRIANGLES);
@@ -172,7 +182,7 @@ void ArUco::drawPyramid(GLfloat size) {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void ArUco::drawCube(GLfloat size) {
+void ArUco::drawCube(GLfloat size, float color[3]) {
 
 	GLfloat v[8][3] = {
 		{-size/2,-size / 2, -size / 2},
@@ -195,7 +205,7 @@ void ArUco::drawCube(GLfloat size) {
 	};
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(0.0f, 0.0f, 1.0f);
+	glColor3f(color[0], color[1], color[2]);
 	glBegin(GL_QUADS);
 	for (int i = 0; i < 5; i++) {
 		glVertex3fv(&v[faces[i][0]][0]); // Premier sommet de la face
@@ -220,7 +230,7 @@ void ArUco::drawCube(GLfloat size) {
 }
 
 
-void ArUco::drawCylinder(GLfloat size) {
+void ArUco::drawCylinder(GLfloat size, float color[3]) {
 
 	float radius = size / 2;
 	float height = size;
@@ -241,7 +251,7 @@ void ArUco::drawCylinder(GLfloat size) {
 	glEnd();
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(0.0f, 1.0f, 0.0f);
+	glColor3f(color[0], color[1], color[2]);
 
 	// Dessiner la base inférieure
 	glBegin(GL_POLYGON);
@@ -370,15 +380,30 @@ void ArUco::drawScene() {
 	   glPushMatrix();
 
 	   if (m_Markers[m].id == 85 || m_Markers[m].id == 90) {
-		   drawPyramid(m_MarkerSize);
+		   if (containsMarkerWithId(m_Markers, 85) && containsMarkerWithId(m_Markers, 90)) {
+			   drawPyramid(m_MarkerSize, yellow);
+		   }
+		   else {
+			   drawPyramid(m_MarkerSize, red);
+		   }
 	  }
 
 	   if (m_Markers[m].id == 144 || m_Markers[m].id == 161) {
-		   drawCube(m_MarkerSize);
+		   if (containsMarkerWithId(m_Markers, 144) && containsMarkerWithId(m_Markers, 161)) {
+			   drawCube(m_MarkerSize, yellow);
+		   }
+		   else {
+			   drawCube(m_MarkerSize, blue);
+		   }
 	   }
 
 	   if (m_Markers[m].id == 166 || m_Markers[m].id == 214) {
-		   drawCylinder(m_MarkerSize);
+		   if (containsMarkerWithId(m_Markers, 166) && containsMarkerWithId(m_Markers, 214)) {
+			   drawCylinder(m_MarkerSize, yellow);
+		   }
+		   else {
+			   drawCylinder(m_MarkerSize, green);
+		   }
 	   }
 
 	  
@@ -395,6 +420,8 @@ void ArUco::drawScene() {
       // On re=charge la matrice que l'on a sauvegarde
       glPopMatrix();
    }
+
+	
    
    // Desactivation du depth test
    glDisable(GL_DEPTH_TEST);
